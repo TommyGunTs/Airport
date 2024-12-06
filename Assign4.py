@@ -1,3 +1,20 @@
+"""
+*************************************
+CS 1026A - Assignment 4 - Air Travel
+Code by: Thomas Tyndorf
+Student ID: ttyndor3
+File created: November 26th, 2024
+*************************************
+This file serves as the main program controller for the entire air travel system. 
+It must read and parse airport and flight information from text files, storing them 
+in appropriate data structures for efficient access. The program provides comprehensive 
+search functionality including finding flights by city or country, locating direct and 
+connecting flights between airports, identifying the shortest flights from specific airports, 
+and finding return flight options. All results are validated and error-checked, with appropriate 
+error messages provided when operations cannot be completed. This file acts as the central hub, 
+utilizing both the Airport and Flight classes to create a complete flight management system.
+"""
+
 from Flight import *
 from Airport import *
 
