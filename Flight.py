@@ -17,7 +17,6 @@ from Airport import *
 
 class Flight:
     def __init__(self, flight_no, origin, dest, dur):
-        # Strict type checking
         if not isinstance(origin, Airport) or not isinstance(dest, Airport):
             raise TypeError("Origin and destination must be Airport objects")
         if not isinstance(dur, (int, float)) and not isinstance(dur, str):
@@ -26,7 +25,6 @@ class Flight:
         self._flight_no = str(flight_no)
         self._origin = origin
         self._destination = dest
-        # Ensure duration is float
         try:
             self._duration = float(dur)
         except ValueError:
@@ -34,7 +32,8 @@ class Flight:
 
     def __str__(self):
         flight_type = "domestic" if self.is_domestic() else "international"
-        return f"{self._origin.get_city()} to {self._destination.get_city()} ({int(round(self._duration))}h) [{flight_type}]"
+        duration = int(round(float(self.get_duration())))
+        return f"{self.get_origin().get_city()} to {self.get_destination().get_city()} ({duration}h) [{flight_type}]"
 
     def __eq__(self, other):
         if not isinstance(other, Flight):
@@ -43,19 +42,14 @@ class Flight:
                 self._destination.get_code() == other._destination.get_code())
 
     def __add__(self, other):
-        # Strict validation for flight combination
         if not isinstance(other, Flight):
             raise TypeError("Can only combine with another Flight object")
-        if self._destination.get_code() != other._origin.get_code():
-            raise ValueError("Flights cannot be combined - destination and origin don't match")
-        return Flight(
-            self._flight_no,
-            self._origin,
-            other._destination,
-            self._duration + other._duration
-        )
+        if self.get_destination().get_code() != other.get_origin().get_code():
+            raise ValueError("These flights cannot be combined")
+        new_duration = float(self.get_duration()) + float(other.get_duration())
+        return Flight(self.get_flight_no(), self.get_origin(), 
+                     other.get_destination(), new_duration)
 
-    # Getters
     def get_flight_no(self): return self._flight_no
     def get_origin(self): return self._origin
     def get_destination(self): return self._destination
