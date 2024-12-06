@@ -17,12 +17,20 @@ from Airport import *
 
 class Flight:
     def __init__(self, flight_no, origin, dest, dur):
+        # Strict type checking
         if not isinstance(origin, Airport) or not isinstance(dest, Airport):
-            raise TypeError("The origin and destination must be Airport objects")
-        self._flight_no = flight_no
+            raise TypeError("Origin and destination must be Airport objects")
+        if not isinstance(dur, (int, float)) and not isinstance(dur, str):
+            raise TypeError("Duration must be numeric or string convertible to float")
+            
+        self._flight_no = str(flight_no)
         self._origin = origin
         self._destination = dest
-        self._duration = float(dur)
+        # Ensure duration is float
+        try:
+            self._duration = float(dur)
+        except ValueError:
+            raise ValueError("Invalid duration format")
 
     def __str__(self):
         flight_type = "domestic" if self.is_domestic() else "international"
@@ -31,28 +39,27 @@ class Flight:
     def __eq__(self, other):
         if not isinstance(other, Flight):
             return False
-        return self._origin == other._origin and self._destination == other._destination
+        return (self._origin.get_code() == other._origin.get_code() and 
+                self._destination.get_code() == other._destination.get_code())
 
-    def __add__(self, conn_flight):
-        if not isinstance(conn_flight, Flight):
-            raise TypeError("The connecting_flight must be a Flight object")
-        if self.get_destination().get_code() != conn_flight.get_origin().get_code():
-            raise ValueError("These flights cannot be combined")
-        total_duration = float(self.get_duration()) + float(conn_flight.get_duration())
-        return Flight(self.get_flight_no(), self.get_origin(), 
-                     conn_flight.get_destination(), total_duration)
+    def __add__(self, other):
+        # Strict validation for flight combination
+        if not isinstance(other, Flight):
+            raise TypeError("Can only combine with another Flight object")
+        if self._destination.get_code() != other._origin.get_code():
+            raise ValueError("Flights cannot be combined - destination and origin don't match")
+        return Flight(
+            self._flight_no,
+            self._origin,
+            other._destination,
+            self._duration + other._duration
+        )
 
-    def get_flight_no(self):
-        return self._flight_no
-
-    def get_origin(self):
-        return self._origin
-
-    def get_destination(self):
-        return self._destination
-
-    def get_duration(self):
-        return self._duration
-
+    # Getters
+    def get_flight_no(self): return self._flight_no
+    def get_origin(self): return self._origin
+    def get_destination(self): return self._destination
+    def get_duration(self): return self._duration
+    
     def is_domestic(self):
-        return self._origin.get_country() == self._destination.get_country()
+        return self._origin.get_country().lower() == self._destination.get_country().lower()
