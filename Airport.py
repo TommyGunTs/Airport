@@ -1,3 +1,17 @@
+"""
+*************************************
+CS 1026A - Assignment 4 - Air Travel
+Code by: Thomas Tyndorf
+Student ID: ttyndor3
+File created: November 26th, 2024
+*************************************
+This file implements an Airport class that manages individual airport data within the air travel system. 
+It handles the storage and retrieval of essential airport information including the three-letter airport code, 
+city name, and country. The class provides methods to compare airports, access their properties, 
+and display airport information in a formatted string. This file serves as a fundamental building block for the
+entire system, as airports are the key locations between which flights operate.
+"""
+
 class Airport:
     """
     A class representing an airport with its identifying code and location details.
