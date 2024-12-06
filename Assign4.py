@@ -25,39 +25,59 @@ all_flights = {}   # Dictionary mapping airport codes to list of departing fligh
 def load_data(airport_file, flight_file):
     """
     Load airport and flight data from files.
-    Args:
-        airport_file (str): Path to airport data file
-        flight_file (str): Path to flight data file
-    Returns:
-        bool: True if loading successful, False otherwise
+    Returns True if both files load successfully, False otherwise.
     """
     try:
+        # Clear existing data
         all_airports.clear()
         all_flights.clear()
 
-        # Load airports
-        with open(airport_file, 'r') as f:
-            for line in f:
-                if line.strip():
-                    code, country, city = [x.strip() for x in line.split('-')]
+        # Step 1: Load airports
+        try:
+            with open(airport_file, 'r') as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    parts = line.strip().split('-')
+                    if len(parts) != 3:
+                        continue
+                    code, country, city = [p.strip() for p in parts]
                     all_airports.append(Airport(code, city, country))
+            
+            if not all_airports:  # Check if any airports were loaded
+                return False
+        except:
+            return False
 
-        # Load flights
-        with open(flight_file, 'r') as f:
-            for line in f:
-                if line.strip():
-                    flight_no, orig_code, dest_code, duration = [x.strip() for x in line.split('-')]
+        # Step 2: Load flights
+        try:
+            with open(flight_file, 'r') as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    parts = line.strip().split('-')
+                    if len(parts) != 4:
+                        continue
+                    flight_no, orig_code, dest_code, duration = [p.strip() for p in parts]
+                    
                     try:
                         origin = get_airport_by_code(orig_code)
                         dest = get_airport_by_code(dest_code)
-                        flight = Flight(flight_no, origin, dest, float(duration))
+                        duration = float(duration)
                         
+                        flight = Flight(flight_no, origin, dest, duration)
                         if orig_code not in all_flights:
                             all_flights[orig_code] = []
                         all_flights[orig_code].append(flight)
-                    except ValueError:
+                    except (ValueError, TypeError):
                         continue
-        return True
+            
+            if not all_flights:  # Check if any flights were loaded
+                return False
+        except:
+            return False
+
+        return True  # Only if both files loaded successfully
     except:
         return False
 
