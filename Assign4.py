@@ -18,66 +18,67 @@ utilizing both the Airport and Flight classes to create a complete flight manage
 from Flight import *
 from Airport import *
 
-# Global containers for storing airport and flight data
-all_airports = []          # List of all Airport objects
-all_flights = {}           # Dictionary mapping airport codes to lists of departing flights
+# Global data structures
+all_airports = []
+all_flights = {}
 
 def load_data(airport_file, flight_file):
-    """Load data from files"""
+    """Load airport and flight data from files"""
     try:
+        # Clear existing data
         all_airports.clear()
         all_flights.clear()
-        
-        # Step 1: Load airports first
+
+        # Load airports
         with open(airport_file, 'r') as f:
             for line in f:
                 if line.strip():
                     code, country, city = [x.strip() for x in line.split('-')]
                     all_airports.append(Airport(code, city, country))
 
-        # Step 2: Load flights
+        # Load flights
         with open(flight_file, 'r') as f:
             for line in f:
                 if line.strip():
                     flight_no, orig_code, dest_code, duration = [x.strip() for x in line.split('-')]
-                    origin = get_airport_by_code(orig_code)
-                    dest = get_airport_by_code(dest_code)
-                    flight = Flight(flight_no, origin, dest, float(duration))
-                    
-                    if orig_code not in all_flights:
-                        all_flights[orig_code] = []
-                    all_flights[orig_code].append(flight)
+                    try:
+                        origin = get_airport_by_code(orig_code)
+                        dest = get_airport_by_code(dest_code)
+                        flight = Flight(flight_no, origin, dest, duration)
+                        
+                        if orig_code not in all_flights:
+                            all_flights[orig_code] = []
+                        all_flights[orig_code].append(flight)
+                    except ValueError:
+                        continue
         return True
-    except Exception as e:
-        print(f"Error: {e}")  # For debugging
+    except:
         return False
 
 def get_airport_by_code(code):
     """Find airport by code"""
     for airport in all_airports:
-        if airport.get_code().upper() == code.upper():  # Case-insensitive
+        if airport.get_code() == code:
             return airport
-    raise ValueError(f"No airport with the given code: {code}")
+    raise ValueError(f"No airport with code: {code}")
 
 def find_all_city_flights(city):
-    """Find flights by city"""
+    """Find all flights involving city"""
     matches = []
     for flights in all_flights.values():
         for flight in flights:
-            origin_city = flight.get_origin().get_city().lower()
-            dest_city = flight.get_destination().get_city().lower()
-            if city.lower() in (origin_city, dest_city):
+            if (flight.get_origin().get_city() == city or 
+                flight.get_destination().get_city() == city):
                 matches.append(flight)
     return matches
 
 def find_all_country_flights(country):
-    """Find flights by country"""
+    """Find all flights involving country"""
     matches = []
     for flights in all_flights.values():
         for flight in flights:
-            origin_country = flight.get_origin().get_country().lower()
-            dest_country = flight.get_destination().get_country().lower()
-            if country.lower() in (origin_country, dest_country):
+            if (flight.get_origin().get_country() == country or 
+                flight.get_destination().get_country() == country):
                 matches.append(flight)
     return matches
 
@@ -86,24 +87,47 @@ def find_flight_between(orig_airport, dest_airport):
     orig_code = orig_airport.get_code()
     dest_code = dest_airport.get_code()
 
-    # Direct flight check
+    # Check direct flights
     if orig_code in all_flights:
         for flight in all_flights[orig_code]:
             if flight.get_destination().get_code() == dest_code:
                 return f"Direct Flight: {orig_code} to {dest_code}"
 
-    # Connecting flight check
+    # Check connecting flights
     connecting = set()
-    for first_leg in all_flights.get(orig_code, []):
-        mid_code = first_leg.get_destination().get_code()
-        for second_leg in all_flights.get(mid_code, []):
-            if second_leg.get_destination().get_code() == dest_code:
-                connecting.add(mid_code)
+    if orig_code in all_flights:
+        for first_flight in all_flights[orig_code]:
+            mid_code = first_flight.get_destination().get_code()
+            if mid_code in all_flights:
+                for second_flight in all_flights[mid_code]:
+                    if second_flight.get_destination().get_code() == dest_code:
+                        connecting.add(mid_code)
 
     if connecting:
         return connecting
 
-    raise ValueError(f"There are no direct or single-hop connecting flights from {orig_code} to {dest_code}")
+    raise ValueError(f"No flights from {orig_code} to {dest_code}")
+
+def shortest_flight_from(orig_airport):
+    """Find shortest flight from airport"""
+    orig_code = orig_airport.get_code()
+    if orig_code not in all_flights or not all_flights[orig_code]:
+        return None
+    return min(all_flights[orig_code], key=lambda x: x.get_duration())
+
+def find_return_flight(first_flight):
+    """Find return flight"""
+    dest_code = first_flight.get_destination().get_code()
+    orig_code = first_flight.get_origin().get_code()
+
+    if dest_code not in all_flights:
+        raise ValueError(f"No flights from {dest_code} to {orig_code}")
+
+    for flight in all_flights[dest_code]:
+        if flight.get_destination().get_code() == orig_code:
+            return flight
+
+    raise ValueError(f"No flights from {dest_code} to {orig_code}")
 
 if __name__ == "__main__":
     pass
