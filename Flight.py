@@ -1,3 +1,18 @@
+"""
+*************************************
+CS 1026A - Assignment 4 - Air Travel
+Code by: Thomas Tyndorf
+Student ID: ttyndor3
+File created: November 26th, 2024
+*************************************
+This file implements a Flight class that manages individual flight connections between airports 
+in the air travel system. It must handle flight information including flight numbers (in ABC-123 format), 
+origin and destination airports, and flight durations. The class calculates whether flights are domestic 
+or international based on country information, validates airport objects, and enables the combination of 
+flights for connecting routes. The file depends on Airport.py as flights must operate between valid airport 
+objects, and it includes comprehensive error checking for all operations.
+"""
+
 from Airport import *
 
 class Flight:
