@@ -16,10 +16,7 @@ objects, and it includes comprehensive error checking for all operations.
 from Airport import *
 
 class Flight:
-    """Class representing a flight between airports"""
-    
     def __init__(self, flight_no, origin, dest, dur):
-        """Initialize flight with number, airports and duration"""
         if not isinstance(origin, Airport) or not isinstance(dest, Airport):
             raise TypeError("The origin and destination must be Airport objects")
         self._flight_no = flight_no
@@ -28,24 +25,22 @@ class Flight:
         self._duration = float(dur)
 
     def __str__(self):
-        """Return formatted flight string"""
         flight_type = "domestic" if self.is_domestic() else "international"
         return f"{self._origin.get_city()} to {self._destination.get_city()} ({int(round(self._duration))}h) [{flight_type}]"
 
     def __eq__(self, other):
-        """Compare flights based on airports"""
         if not isinstance(other, Flight):
             return False
         return self._origin == other._origin and self._destination == other._destination
 
     def __add__(self, conn_flight):
-        """Combine two flights for connections"""
         if not isinstance(conn_flight, Flight):
             raise TypeError("The connecting_flight must be a Flight object")
-        if self._destination != conn_flight._origin:
+        if self.get_destination().get_code() != conn_flight.get_origin().get_code():
             raise ValueError("These flights cannot be combined")
-        return Flight(self._flight_no, self._origin, conn_flight._destination, 
-                     self._duration + conn_flight._duration)
+        total_duration = float(self.get_duration()) + float(conn_flight.get_duration())
+        return Flight(self.get_flight_no(), self.get_origin(), 
+                     conn_flight.get_destination(), total_duration)
 
     def get_flight_no(self):
         return self._flight_no
