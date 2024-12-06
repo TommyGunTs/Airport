@@ -42,13 +42,16 @@ class Flight:
                 self._destination.get_code() == other._destination.get_code())
 
     def __add__(self, conn_flight):
-        # Combine two flights for connecting routes
-        if not isinstance(conn_flight, Flight):
-            raise TypeError("The connecting_flight must be a Flight object")
-            
-        # Verify flights can be connected (destination of first matches origin of second)
-        if self._destination.get_code() != conn_flight._origin.get_code():
-            raise ValueError("These flights cannot be combined")
+    """Combine two flights for connecting routes"""
+    if not isinstance(conn_flight, Flight):
+        raise TypeError("The connecting_flight must be a Flight object")
+    
+    if self.get_destination().get_code() != conn_flight.get_origin().get_code():
+        raise ValueError("These flights cannot be combined")
+    
+    total_duration = float(self.get_duration()) + float(conn_flight.get_duration())
+    return Flight(self.get_flight_no(), self.get_origin(), 
+                 conn_flight.get_destination(), total_duration)
             
         # Create new combined flight
         return Flight(
