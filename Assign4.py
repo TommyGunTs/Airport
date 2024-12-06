@@ -23,32 +23,48 @@ all_airports = []  # List to store Airport objects
 all_flights = {}   # Dictionary mapping airport codes to list of departing flights
 
 def load_data(airport_file, flight_file):
-    """
-    Load airport and flight data from files.
-    Returns True if both files load successfully, False otherwise.
-    """
+    """Load data from airport and flight files"""
     try:
-        # Clear existing data
         all_airports.clear()
         all_flights.clear()
 
-        # Step 1: Load airports
-        try:
-            with open(airport_file, 'r') as f:
-                for line in f:
-                    if not line.strip():
-                        continue
-                    parts = line.strip().split('-')
-                    if len(parts) != 3:
-                        continue
-                    code, country, city = [p.strip() for p in parts]
-                    all_airports.append(Airport(code, city, country))
-            
-            if not all_airports:  # Check if any airports were loaded
-                return False
-        except:
-            return False
+        # Load airports
+        with open(airport_file, 'r') as file:
+            for line in file:
+                if not line.strip():
+                    continue
+                parts = [p.strip() for p in line.split('-')]
+                if len(parts) != 3:
+                    continue
+                code, country, city = parts
+                all_airports.append(Airport(code, city, country))
 
+        # Load flights with improved parsing
+        with open(flight_file, 'r') as file:
+            for line in file:
+                if not line.strip():
+                    continue
+                # Split and clean parts
+                parts = [p.strip() for p in line.split('-')]
+                if len(parts) != 5:  # Now expecting 5 parts
+                    continue
+                
+                flight_code, flight_num, orig, dest, duration = parts
+                try:
+                    origin = get_airport_by_code(orig)
+                    destination = get_airport_by_code(dest)
+                    flight_no = f"{flight_code}{flight_num}"
+                    flight = Flight(flight_no, origin, destination, float(duration))
+                    
+                    if orig not in all_flights:
+                        all_flights[orig] = []
+                    all_flights[orig].append(flight)
+                except (ValueError, TypeError):
+                    continue
+
+        return bool(all_airports and all_flights)
+    except:
+        return False
         # Step 2: Load flights
         try:
             with open(flight_file, 'r') as f:
