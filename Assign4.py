@@ -58,65 +58,76 @@ def get_airport_by_code(code):
             return airport
     raise ValueError(f"No airport with the given code: {code}")
 
-def find_all_city_flights(city):
-    """Find all flights involving given city."""
+def improved_find_all_city_flights(city):
+    """Find all flights involving the given city (case-insensitive)."""
+    city = city.strip().lower()
     result = []
     for flights in all_flights.values():
         for flight in flights:
-            if (flight.get_origin().get_city().lower() == city.lower() or 
-                flight.get_destination().get_city().lower() == city.lower()):
+            if (flight.get_origin().get_city().lower() == city or 
+                flight.get_destination().get_city().lower() == city):
                 result.append(flight)
     return result
 
-def find_all_country_flights(country):
-    """Find all flights involving given country."""
+def improved_find_all_country_flights(country):
+    """Find all flights involving the given country (case-insensitive)."""
+    country = country.strip().lower()
     result = []
     for flights in all_flights.values():
         for flight in flights:
-            if (flight.get_origin().get_country().lower() == country.lower() or 
-                flight.get_destination().get_country().lower() == country.lower()):
+            if (flight.get_origin().get_country().lower() == country or 
+                flight.get_destination().get_country().lower() == country):
                 result.append(flight)
     return result
 
-def find_flight_between(orig_airport, dest_airport):
-    """Find direct or connecting flights between airports."""
-    # Check direct flights
-    if orig_airport.get_code() in all_flights:
-        for flight in all_flights[orig_airport.get_code()]:
+def improved_find_flight_between(orig_airport, dest_airport):
+    """Find direct or connecting flights between two airports."""
+    orig_code = orig_airport.get_code()
+    dest_code = dest_airport.get_code()
+
+    # Check for direct flights
+    if orig_code in all_flights:
+        for flight in all_flights[orig_code]:
             if flight.get_destination() == dest_airport:
-                return f"Direct Flight: {orig_airport.get_code()} to {dest_airport.get_code()}"
+                return f"Direct Flight: {orig_code} to {dest_code}"
     
     # Check connecting flights
-    connecting = set()
-    if orig_airport.get_code() in all_flights:
-        for first_flight in all_flights[orig_airport.get_code()]:
-            connecting_code = first_flight.get_destination().get_code()
+    connecting_flights = []
+    if orig_code in all_flights:
+        for flight in all_flights[orig_code]:
+            connecting_code = flight.get_destination().get_code()
             if connecting_code in all_flights:
                 for second_flight in all_flights[connecting_code]:
                     if second_flight.get_destination() == dest_airport:
-                        connecting.add(connecting_code)
+                        connecting_flights.append((flight, second_flight))
     
-    if connecting:
-        return connecting
-    raise ValueError(f"There are no direct or single-hop connecting flights from {orig_airport.get_code()} to {dest_airport.get_code()}")
+    if connecting_flights:
+        return connecting_flights  # Return list of connecting flights
 
-def shortest_flight_from(orig_airport):
-    """Find shortest flight from given airport."""
-    if orig_airport.get_code() not in all_flights:
-        return None
-    return min(all_flights[orig_airport.get_code()], 
-              key=lambda x: float(x.get_duration()))
-
-def find_return_flight(first_flight):
-    """Find return flight for given flight."""
+    raise ValueError(f"No direct or single-hop connecting flights from {orig_code} to {dest_code}")
+def improved_find_return_flight(first_flight):
+    """Find a return flight for the given flight."""
     dest_code = first_flight.get_destination().get_code()
-    if dest_code not in all_flights:
-        raise ValueError(f"There is no flight from {dest_code} to {first_flight.get_origin().get_code()}")
-    
-    for flight in all_flights[dest_code]:
-        if flight.get_destination() == first_flight.get_origin():
-            return flight
-    raise ValueError(f"There is no flight from {dest_code} to {first_flight.get_origin().get_code()}")
+    origin_code = first_flight.get_origin().get_code()
+
+    if dest_code in all_flights:
+        for flight in all_flights[dest_code]:
+            if flight.get_destination().get_code() == origin_code:
+                return flight
+
+    raise ValueError(f"No return flight from {dest_code} to {origin_code}")
+
+
+def improved_shortest_flight_from(orig_airport):
+    """Find the shortest flight originating from the given airport."""
+    orig_code = orig_airport.get_code()
+
+    if orig_code not in all_flights or not all_flights[orig_code]:
+        return None  # No flights found
+
+    # Find the flight with the minimum duration
+    return min(all_flights[orig_code], key=lambda flight: flight.get_duration())
+
 
 if __name__ == "__main__":
     pass
