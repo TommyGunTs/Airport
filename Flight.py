@@ -25,6 +25,21 @@ class Flight:
         _duration (float): Flight duration in hours
     """
 
+    def _validate_flight_number(self, flight_no):
+        import re
+        pattern = r'^[A-Z]{3}-\d{3}$'
+        if not re.match(pattern, flight_no):
+            raise ValueError("Flight number must be in ABC-123 format")
+
+    def _validate_duration(self, duration):
+        try:
+            duration = float(duration)
+            if duration <= 0:
+                raise ValueError("Duration must be positive")
+            return duration
+        except ValueError:
+            raise ValueError("Duration must be a valid number")
+
     def __init__(self, flight_no, origin, dest, dur):
         """
         Initialize a new Flight object.
@@ -35,13 +50,16 @@ class Flight:
             dur (float): Flight duration in hours
         Raises:
             TypeError: If origin or destination aren't Airport objects
+            ValueError: If flight number format is invalid or duration is not positive
         """
         if not isinstance(origin, Airport) or not isinstance(dest, Airport):
             raise TypeError("The origin and destination must be Airport objects")
+        
+        self._validate_flight_number(flight_no)
         self._flight_no = flight_no
         self._origin = origin
         self._destination = dest
-        self._duration = float(dur)
+        self._duration = self._validate_duration(dur)
 
     def __str__(self):
         """
@@ -64,7 +82,7 @@ class Flight:
             return False
         return self._origin == other._origin and self._destination == other._destination
 
-    def __add__(self, conn_flight):
+    def __add__(self, conn_flight: 'Flight') -> 'Flight':
         """
         Combine two flights into a single connecting flight.
         Args:
@@ -106,10 +124,22 @@ class Flight:
         """
         return self._origin.get_country() == self._destination.get_country()
 
-    def set_origin(self, origin):
-        """Update departure airport."""
+    def set_origin(self, origin: 'Airport') -> None:
+        """
+        Update departure airport.
+        Raises:
+            TypeError: If origin is not an Airport object
+        """
+        if not isinstance(origin, Airport):
+            raise TypeError("Origin must be an Airport object")
         self._origin = origin
 
-    def set_destination(self, destination):
-        """Update arrival airport."""
+    def set_destination(self, destination: 'Airport') -> None:
+        """
+        Update arrival airport.
+        Raises:
+            TypeError: If destination is not an Airport object
+        """
+        if not isinstance(destination, Airport):
+            raise TypeError("Destination must be an Airport object")
         self._destination = destination
