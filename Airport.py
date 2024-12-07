@@ -12,7 +12,9 @@ and display airport information in a formatted string. This file serves as a fun
 entire system, as airports are the key locations between which flights operate.
 """
 
-class Airport:
+import re
+
+class FixedAirport:
     """Airport class representing an airport with code, city, and country."""
     
     def __init__(self, code, city, country):
@@ -26,22 +28,15 @@ class Airport:
         return f"{self._code} ({self._city}, {self._country})"
 
     def __eq__(self, other):
-        """Compare airports based on code."""
-        if not isinstance(other, Airport):
-            return False
-        return self._code == other._code
+        return isinstance(other, FixedAirport) and self._code == other._code
 
-    def get_code(self):
-        """Return airport code."""
-        return self._code
+    def get_code(self): return self._code
+    
+    def get_city(self): return self._city
+    
+    def get_country(self): return self._country
 
-    def get_city(self):
-        """Return airport city."""
-        return self._city
 
-    def get_country(self):
-        """Return airport country."""
-        return self._country
 
     def set_city(self, city):
         """Set airport city."""
