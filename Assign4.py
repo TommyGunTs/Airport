@@ -15,77 +15,83 @@ error messages provided when operations cannot be completed. This file acts as t
 utilizing both the Airport and Flight classes to create a complete flight management system.
 """
 
-
 from Flight import *
 from Airport import *
+from typing import List, Dict, Set, Optional, Union
 
-# Global containers for storing all airport and flight data
-all_airports = []  # List to store Airport objects
-all_flights = {}   # Dictionary mapping airport codes to lists of departing flights
+# Global containers
+all_airports: List[Airport] = []
+all_flights: Dict[str, List[Flight]] = {}
 
-def load_data(airport_file, flight_file):
-    """
-    Load and parse airport and flight data from text files.
-    Args:
-        airport_file (str): Name of airports data file
-        flight_file (str): Name of flights data file
-    Returns:
-        bool: True if loading successful, False if any errors occur
-    """
+def load_data(airport_file: str, flight_file: str) -> bool:
+    """Load and parse airport and flight data from text files."""
+    all_airports.clear()
+    all_flights.clear()
+    
     try:
+        if not airport_file or not flight_file:
+            raise ValueError("File paths cannot be empty")
+            
         # Process airports file
         with open(airport_file, 'r') as file:
-            for line in file:
-                # Split line and clean whitespace
-                airport_code, country, city = [x.strip() for x in line.split('-')]
-                new_airport = Airport(airport_code, city, country)
-                all_airports.append(new_airport)
+            for line_num, line in enumerate(file, 1):
+                try:
+                    parts = [x.strip() for x in line.split('-')]
+                    if len(parts) != 3:
+                        raise ValueError(f"Invalid format at line {line_num}")
+                    
+                    airport_code, country, city = parts
+                    new_airport = Airport(airport_code, city, country)
+                    all_airports.append(new_airport)
+                except ValueError as e:
+                    print(f"Error in airport file, line {line_num}: {e}")
+                    return False
 
         # Process flights file
         with open(flight_file, 'r') as file:
-            for line in file:
-                # Split line and clean whitespace
-                flight_code, origin_code, dest_code, flight_duration = [x.strip() for x in line.split('-')]
-                
-                # Get airport objects for origin and destination
-                origin_airport = get_airport_by_code(origin_code)
-                dest_airport = get_airport_by_code(dest_code)
-                
-                # Create new flight object
-                new_flight = Flight(flight_code, origin_airport, dest_airport, flight_duration)
-                
-                # Store flight in dictionary under origin airport code
-                if origin_code not in all_flights:
-                    all_flights[origin_code] = []
-                all_flights[origin_code].append(new_flight)
-                
+            for line_num, line in enumerate(file, 1):
+                try:
+                    parts = [x.strip() for x in line.split('-')]
+                    if len(parts) != 4:
+                        raise ValueError(f"Invalid format at line {line_num}")
+                    
+                    flight_code, origin_code, dest_code, flight_duration = parts
+                    origin_airport = get_airport_by_code(origin_code)
+                    dest_airport = get_airport_by_code(dest_code)
+                    
+                    new_flight = Flight(flight_code, origin_airport, dest_airport, flight_duration)
+                    
+                    if origin_code not in all_flights:
+                        all_flights[origin_code] = []
+                    all_flights[origin_code].append(new_flight)
+                except ValueError as e:
+                    print(f"Error in flight file, line {line_num}: {e}")
+                    return False
+                    
         return True
-    except Exception:
+        
+    except FileNotFoundError as e:
+        print(f"File not found: {e}")
+        return False
+    except Exception as e:
+        print(f"Error loading data: {e}")
         return False
 
-def get_airport_by_code(code):
-    """
-    Find airport object by its code.
-    Args:
-        code (str): 3-letter airport code
-    Returns:
-        Airport: Matching airport object
-    Raises:
-        ValueError: If no airport found with given code
-    """
+def get_airport_by_code(code: str) -> Airport:
+    """Find airport object by its code."""
+    if not isinstance(code, str) or len(code.strip()) != 3:
+        raise ValueError("Invalid airport code format")
+        
     for airport in all_airports:
-        if airport.get_code() == code:
+        if airport.get_code() == code.upper():
             return airport
-    raise ValueError(f"No airport with the given code: {code}")
+    raise ValueError(f"No airport found with code: {code}")
 
-def find_all_city_flights(city):
-    """
-    Find all flights involving a specific city.
-    Args:
-        city (str): City name to search for
-    Returns:
-        list: List of Flight objects involving the city
-    """
+def find_all_city_flights(city: str) -> List[Flight]:
+    """Find all flights involving a specific city."""
+    if not city or not isinstance(city, str):
+        raise ValueError("Invalid city name")
+        
     matching_flights = []
     for flights in all_flights.values():
         for flight in flights:
@@ -94,14 +100,11 @@ def find_all_city_flights(city):
                 matching_flights.append(flight)
     return matching_flights
 
-def find_all_country_flights(country):
-    """
-    Find all flights involving a specific country.
-    Args:
-        country (str): Country name to search for
-    Returns:
-        list: List of Flight objects involving the country
-    """
+def find_all_country_flights(country: str) -> List[Flight]:
+    """Find all flights involving a specific country."""
+    if not country or not isinstance(country, str):
+        raise ValueError("Invalid country name")
+        
     matching_flights = []
     for flights in all_flights.values():
         for flight in flights:
@@ -110,25 +113,21 @@ def find_all_country_flights(country):
                 matching_flights.append(flight)
     return matching_flights
 
-def find_flight_between(orig_airport, dest_airport):
-    """
-    Find direct or connecting flights between two airports.
-    Args:
-        orig_airport (Airport): Departure airport
-        dest_airport (Airport): Arrival airport
-    Returns:
-        str: Message for direct flight
-        set: Set of connecting airport codes
-    Raises:
-        ValueError: If no valid route found
-    """
-    # Check for direct flights
+def find_flight_between(orig_airport: Airport, dest_airport: Airport) -> Union[str, Set[str]]:
+    """Find direct or connecting flights between two airports."""
+    if not isinstance(orig_airport, Airport) or not isinstance(dest_airport, Airport):
+        raise TypeError("Both arguments must be Airport objects")
+        
+    if orig_airport == dest_airport:
+        raise ValueError("Origin and destination cannot be the same")
+
+    # Check direct flights
     if orig_airport.get_code() in all_flights:
         for flight in all_flights[orig_airport.get_code()]:
             if flight.get_destination() == dest_airport:
                 return f"Direct Flight: {orig_airport.get_code()} to {dest_airport.get_code()}"
     
-    # Check for connecting flights
+    # Check connecting flights
     connecting_airports = set()
     if orig_airport.get_code() in all_flights:
         for first_flight in all_flights[orig_airport.get_code()]:
@@ -141,40 +140,31 @@ def find_flight_between(orig_airport, dest_airport):
     if connecting_airports:
         return connecting_airports
         
-    raise ValueError(f"There are no direct or single-hop connecting flights from {orig_airport.get_code()} to {dest_airport.get_code()}")
+    raise ValueError(f"No flights found from {orig_airport.get_code()} to {dest_airport.get_code()}")
 
-def shortest_flight_from(orig_airport):
-    """
-    Find shortest flight from given airport.
-    Args:
-        orig_airport (Airport): Departure airport
-    Returns:
-        Flight: Flight object with shortest duration, or None if no flights
-    """
+def shortest_flight_from(orig_airport: Airport) -> Optional[Flight]:
+    """Find shortest flight from given airport."""
+    if not isinstance(orig_airport, Airport):
+        raise TypeError("Argument must be an Airport object")
+        
     if orig_airport.get_code() not in all_flights:
         return None
     return min(all_flights[orig_airport.get_code()], key=lambda x: x.get_duration())
 
-def find_return_flight(first_flight):
-    """
-    Find return flight for given flight.
-    Args:
-        first_flight (Flight): Original flight to find return for
-    Returns:
-        Flight: Matching return flight
-    Raises:
-        ValueError: If no return flight exists
-    """
+def find_return_flight(first_flight: Flight) -> Flight:
+    """Find return flight for given flight."""
+    if not isinstance(first_flight, Flight):
+        raise TypeError("Argument must be a Flight object")
+        
     dest_code = first_flight.get_destination().get_code()
     if dest_code not in all_flights:
-        raise ValueError(f"There is no flight from {dest_code} to {first_flight.get_origin().get_code()}")
+        raise ValueError(f"No flights from {dest_code}")
     
     for flight in all_flights[dest_code]:
         if flight.get_destination() == first_flight.get_origin():
             return flight
             
-    raise ValueError(f"There is no flight from {dest_code} to {first_flight.get_origin().get_code()}")
+    raise ValueError(f"No return flight found to {first_flight.get_origin().get_code()}")
 
 if __name__ == "__main__":
-    # Test code can be added here
     pass
