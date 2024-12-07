@@ -19,25 +19,26 @@ from Flight import *
 from Airport import *
 
 # Global containers
-all_airports = []
-all_flights = {}
+all_airports = []  # List of Airport objects
+all_flights = {}   # Dictionary: airport_code -> list of flights
 
 def load_data(airport_file, flight_file):
+    """Load airport and flight data from files."""
     all_airports.clear()
     all_flights.clear()
     
     try:
-        # Process airports
+        # Load airports
         with open(airport_file, 'r') as file:
             for line in file:
-                if line.strip():  # Skip empty lines
+                if line.strip():
                     code, country, city = [x.strip() for x in line.split('-')]
                     all_airports.append(Airport(code, city, country))
 
-        # Process flights
+        # Load flights
         with open(flight_file, 'r') as file:
             for line in file:
-                if line.strip():  # Skip empty lines
+                if line.strip():
                     flight_no, origin, dest, duration = [x.strip() for x in line.split('-')]
                     origin_airport = get_airport_by_code(origin)
                     dest_airport = get_airport_by_code(dest)
@@ -52,12 +53,14 @@ def load_data(airport_file, flight_file):
         return False
 
 def get_airport_by_code(code):
+    """Find airport by code."""
     for airport in all_airports:
         if airport.get_code() == code:
             return airport
-    raise ValueError(f"No airport found with code: {code}")
+    raise ValueError(f"No airport with the given code: {code}")
 
 def find_all_city_flights(city):
+    """Find all flights involving given city."""
     result = []
     for flights in all_flights.values():
         for flight in flights:
@@ -67,6 +70,7 @@ def find_all_city_flights(city):
     return result
 
 def find_all_country_flights(country):
+    """Find all flights involving given country."""
     result = []
     for flights in all_flights.values():
         for flight in flights:
@@ -76,6 +80,7 @@ def find_all_country_flights(country):
     return result
 
 def find_flight_between(orig_airport, dest_airport):
+    """Find direct or connecting flights between airports."""
     # Check direct flights
     if orig_airport.get_code() in all_flights:
         for flight in all_flights[orig_airport.get_code()]:
@@ -94,23 +99,25 @@ def find_flight_between(orig_airport, dest_airport):
     
     if connecting:
         return connecting
-    raise ValueError("No valid route found")
+    raise ValueError(f"There are no direct or single-hop connecting flights from {orig_airport.get_code()} to {dest_airport.get_code()}")
 
 def shortest_flight_from(orig_airport):
+    """Find shortest flight from given airport."""
     if orig_airport.get_code() not in all_flights:
         return None
     return min(all_flights[orig_airport.get_code()], 
               key=lambda x: float(x.get_duration()))
 
 def find_return_flight(first_flight):
+    """Find return flight for given flight."""
     dest_code = first_flight.get_destination().get_code()
     if dest_code not in all_flights:
-        raise ValueError("No return flights available")
+        raise ValueError(f"There is no flight from {dest_code} to {first_flight.get_origin().get_code()}")
     
     for flight in all_flights[dest_code]:
         if flight.get_destination() == first_flight.get_origin():
             return flight
-    raise ValueError("No return flights available")
+    raise ValueError(f"There is no flight from {dest_code} to {first_flight.get_origin().get_code()}")
 
 if __name__ == "__main__":
     pass
