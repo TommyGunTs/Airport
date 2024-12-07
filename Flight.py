@@ -16,7 +16,7 @@ objects, and it includes comprehensive error checking for all operations.
 from Airport import *
 import re
 
-class Flight:
+class FixedFlight(Flight):
     """Flight class representing a flight between airports."""
     
     def __init__(self, flight_no, origin, dest, dur):
@@ -50,14 +50,12 @@ class Flight:
         """Combine two flights if they can connect."""
         if not isinstance(conn_flight, Flight):
             raise TypeError("The connecting_flight must be a Flight object")
-        if self._destination != conn_flight._origin:
-            raise ValueError("These flights cannot be combined")
-        return Flight(
-            self._flight_no,
-            self._origin,
-            conn_flight._destination,
-            self._duration + conn_flight._duration
-        )
+        if self._destination() != conn_flight.get_origin():
+            raise ValueError(f"Cannot combine flights: {self.get_flight_no()} "
+                             f"to {self.get_destination().get_code()} "
+                             f"and {conn_flight.get_flight_no()} "
+                             f"from {conn_flight.get_origin().get_code()}")
+        return FixedFlight(combined_flight_no, self.get_origin(), conn_flight.get_destination(), combined_duration)
 
     # Getters
     def get_flight_no(self): return self._flight_no
