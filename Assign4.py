@@ -51,7 +51,6 @@ def load_data(airport_file, flight_file):
         return True
     except:
         return False
-
 def get_airport_by_code(code):
     """Find airport by code."""
     for airport in all_airports:
